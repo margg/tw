@@ -9,10 +9,10 @@ public class Producer implements Runnable {
 
     public void run() {
 
-        for(int i = 0;  i < 100;   i++) {
+        for (int i = 0; i < 100; i++) {
             try {
-                buffer.put("message "+i);
-                System.out.println("\tProducer message "+i);
+                buffer.put("message " + i);
+                System.out.println("\tProducer message " + i);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

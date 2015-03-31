@@ -6,5 +6,6 @@ package zad1;
 public interface Semaphore {
 
     public void take();
+
     public void give();
 }

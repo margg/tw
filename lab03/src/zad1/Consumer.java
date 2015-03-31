@@ -9,7 +9,7 @@ public class Consumer implements Runnable {
 
     public void run() {
 
-        for(int i = 0;  i < 100;   i++) {
+        for (int i = 0; i < 100; i++) {
             try {
                 String message = (String) buffer.take();
                 System.out.println("Consumer " + message);
