@@ -7,7 +7,8 @@ public class BinarySemaphore implements Semaphore {
 
     private volatile int state = 1;
 
-    public BinarySemaphore() {}
+    public BinarySemaphore() {
+    }
 
     public BinarySemaphore(int state) {
         this.state = state;
