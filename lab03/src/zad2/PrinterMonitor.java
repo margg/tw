@@ -2,6 +2,8 @@ package zad2;
 
 import java.util.Deque;
 import java.util.LinkedList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -14,10 +16,10 @@ import static java.lang.Thread.sleep;
 public class PrinterMonitor {
 
 
-    private static final int N = 4;
-    private static Lock frontLock = new ReentrantLock();
-    private static Lock backLock = new ReentrantLock();
-    private static Condition notEmpty = frontLock.newCondition();
+    private static final int PROCESS_COUNT = 30;
+    private static final int PRINTERS_COUNT = 10;
+    private static Lock lock = new ReentrantLock();
+    private static Condition notEmpty = lock.newCondition();
     private static Deque<Integer> printersQueue = new LinkedList<Integer>();
 
     public static void main(String[] args) {
@@ -40,58 +42,40 @@ public class PrinterMonitor {
             }
         };
 
-        Thread tc1 = new Thread(process);
-        Thread tc2 = new Thread(process);
-        Thread tc3 = new Thread(process);
-        Thread tc4 = new Thread(process);
-        Thread tp1 = new Thread(process);
-        Thread tp2 = new Thread(process);
-        Thread tp3 = new Thread(process);
-        Thread tp4 = new Thread(process);
+        ExecutorService service = Executors.newFixedThreadPool(PROCESS_COUNT);
 
-        for (int i = 0; i < N; i++) {
+        for (int i = 0; i < PRINTERS_COUNT; i++) {
             printersQueue.add(i);
         }
 
+        for (int i = 0; i < PROCESS_COUNT; i++) {
+            service.submit(new Thread(process));
+        }
 
-        tc1.start();
-        tc2.start();
-        tc3.start();
-        tc4.start();
-        tp1.start();
-        tp2.start();
-        tp3.start();
-        tp4.start();
+        service.shutdown();
 
-
-    }
-
-    private static void print(int printerId) throws InterruptedException {
-        System.out.println(Thread.currentThread().getId() + " print() " + printerId);
-        sleep(1000);
     }
 
     private static void release(int printerId) throws InterruptedException {
-        frontLock.lock();
+        lock.lock();
         try {
 
-            System.out.println(Thread.currentThread().getId() + " release(" + printerId + ") - queue: " + printersQueue.size());
+            System.out.println(Thread.currentThread().getId() + " release(" + printerId + ") - queue size: " + printersQueue.size());
 
             printersQueue.addLast(printerId);
             notEmpty.signal();
 
         } finally {
-            frontLock.unlock();
+            lock.unlock();
         }
     }
 
-
     private static int reserve() throws InterruptedException {
-        frontLock.lock();
+        lock.lock();
         try {
 
             while (printersQueue.isEmpty()) {
-                System.out.println(Thread.currentThread().getId() + " reserve() - queue: " + printersQueue.size() + " waiting...");
+                System.out.println(Thread.currentThread().getId() + " reserve() - queue size: " + printersQueue.size() + " waiting...");
                 notEmpty.await();
             }
 
@@ -105,13 +89,19 @@ public class PrinterMonitor {
                 }
             }*/
 
-            System.out.println(Thread.currentThread().getId() + " reserve() - queue: " + printersQueue.size() + ", FIRST: " + printersQueue.peekFirst());
+            System.out.println(Thread.currentThread().getId() + " reserve() - queue size: " + printersQueue.size() + ", FIRST: " + printersQueue.peekFirst());
 
             return printersQueue.removeFirst();
 
         } finally {
-            frontLock.unlock();
+            lock.unlock();
         }
+    }
+
+
+    private static void print(int printerId) throws InterruptedException {
+        System.out.println(Thread.currentThread().getId() + " print() \t" + printerId);
+        sleep(1000);
     }
 
     private static void createDoc() throws InterruptedException {
