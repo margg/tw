@@ -16,7 +16,7 @@ import static java.lang.Thread.sleep;
 public class PrinterMonitor {
 
 
-    private static final int PROCESS_COUNT = 30;
+    private static final int PROCESS_COUNT = 20;
     private static final int PRINTERS_COUNT = 10;
     private static Lock lock = new ReentrantLock();
     private static Condition notEmpty = lock.newCondition();
@@ -76,8 +76,13 @@ public class PrinterMonitor {
 
             while (printersQueue.isEmpty()) {
                 System.out.println(Thread.currentThread().getId() + " reserve() - queue size: " + printersQueue.size() + " waiting...");
+
                 notEmpty.await();
             }
+
+            System.out.println(Thread.currentThread().getId() + " reserve() - queue size: " + printersQueue.size() + ", FIRST: " + printersQueue.peekFirst());
+
+            return printersQueue.removeFirst();
 
             /* while (printersQueue.size() < 2) {
                 backLock.lock();
@@ -88,10 +93,6 @@ public class PrinterMonitor {
                     backLock.unlock();
                 }
             }*/
-
-            System.out.println(Thread.currentThread().getId() + " reserve() - queue size: " + printersQueue.size() + ", FIRST: " + printersQueue.peekFirst());
-
-            return printersQueue.removeFirst();
 
         } finally {
             lock.unlock();

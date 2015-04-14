@@ -27,6 +27,7 @@ public class Restaurant {
 
                 System.out.println("Found pair\t" + id);
                 System.out.println("Waiting for table being empty...\t" + id);
+
                 while (table != Table.EMPTY) {
                     notEmptyTable.await();
                 }
@@ -34,9 +35,11 @@ public class Restaurant {
 
 
                 Condition condition = conditionsMap.get(id);
-                table = Table.ONE_PERSON;
+                table = table.join();
+
                 System.out.println("At the table\t" + id);
                 conditionsMap.remove(id);
+
                 System.out.println("Telling pair not to wait anymore\t" + id);
                 condition.signal();
 
