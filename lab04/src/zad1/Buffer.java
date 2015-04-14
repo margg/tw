@@ -14,21 +14,29 @@ public class Buffer {
 
     private int BUFFER_SIZE;
     private int CLIENTS_COUNT;
-    private List<Integer> buffer = new ArrayList<Integer>(BUFFER_SIZE);
+    private List<Integer> buffer;
 
-    private List<Lock> clientsLocks = new ArrayList<Lock>(CLIENTS_COUNT);
-    private List<Condition> conditions = new ArrayList<Condition>(CLIENTS_COUNT);
-    private List<Integer> clientsPositions = new ArrayList<Integer>(CLIENTS_COUNT);
+    private List<Lock> clientsLocks;
+    private List<Condition> conditions;
+    private List<Integer> clientsPositions;
 
     public Buffer(int bufferSize, int sumOfClients) {
         this.BUFFER_SIZE = bufferSize;
         this.CLIENTS_COUNT = sumOfClients;
+        buffer = new ArrayList<Integer>(BUFFER_SIZE);
+        clientsLocks = new ArrayList<Lock>(CLIENTS_COUNT);
+        conditions = new ArrayList<Condition>(CLIENTS_COUNT);
+        clientsPositions = new ArrayList<Integer>(CLIENTS_COUNT);
     }
 
 
     public void blockUntilNextAvailable(int clientId) throws InterruptedException {
-        Condition previousCondition = conditions.get(clientId - 1);
-        Lock previousLock = clientsLocks.get(clientId - 1);
+        int idOfClientToWaitFor = (clientId == 0) ? CLIENTS_COUNT-1 : clientId - 1;
+
+//        System.out.println("Client " + clientId + " will be waiting for " + idOfClientToWaitFor);
+
+        Condition previousCondition = conditions.get(idOfClientToWaitFor);
+        Lock previousLock = clientsLocks.get(idOfClientToWaitFor);
 
         previousLock.lock();
         try {
@@ -36,13 +44,20 @@ public class Buffer {
             if (desiredIndex == BUFFER_SIZE) {
                 desiredIndex = 0;
             }
+//            System.out.println("Desired id for Client " + clientId + " is " + desiredIndex);
 
-            int previousClientIndex = clientsPositions.get(clientId - 1);
+            int previousClientIndex = clientsPositions.get(idOfClientToWaitFor);
 
             while (desiredIndex == previousClientIndex) {
+
+                System.out.println("Client " + clientId + " waiting for previous client at index " + previousClientIndex);
+
                 previousCondition.await();
-                previousClientIndex = clientsPositions.get(clientId - 1);
+                previousClientIndex = clientsPositions.get(idOfClientToWaitFor);
             }
+
+            System.out.println("Client " + clientId + " has space to process.");
+
         } finally {
             previousLock.unlock();
         }
@@ -53,9 +68,12 @@ public class Buffer {
 
         ourLock.lock();
         int current = clientsPositions.get(clientId);
-        if(current == BUFFER_SIZE - 1) {
+        if (current == BUFFER_SIZE - 1) {
             current = -1;
         }
+
+//        System.out.println("Client " + clientId + " position: " + current + ". Moving on.");
+
         clientsPositions.set(clientId, current + 1);
         ourLock.unlock();
     }
@@ -63,10 +81,13 @@ public class Buffer {
     public void processCurrentElement(int clientId) {
         Integer currentPosition = clientsPositions.get(clientId);
         Integer currentValue = buffer.get(currentPosition);
-        if(currentValue == CLIENTS_COUNT-1) {
+        if (currentValue == CLIENTS_COUNT - 1) {
             System.out.println("Reached end! Consuming...");
             currentValue = -2;
         }
+
+        System.out.println("Client " + clientId + " is processing element " + currentValue + " at index " + currentPosition);
+
         buffer.set(currentPosition, currentValue + 1);
     }
 
@@ -75,19 +96,22 @@ public class Buffer {
         Lock ourLock = clientsLocks.get(clientId);
 
         ourLock.lock();
+
+        System.out.println("Client " + clientId + " signalling work done.");
+
         ourCondition.signalAll();
         ourLock.unlock();
     }
 
     public void setUp() {
-        for (int i = 0; i < buffer.size(); i++) {
-            buffer.set(i, -1);
+        for (int i = 0; i < BUFFER_SIZE; i++) {
+            buffer.add(i, -1);
         }
-        for (int i = 0; i < clientsLocks.size(); i++) {
+        for (int i = 0; i < CLIENTS_COUNT; i++) {
             Lock lock = new ReentrantLock();
-            clientsLocks.set(i, lock);
-            conditions.set(i, lock.newCondition());
-            clientsPositions.set(i, -1);
+            clientsLocks.add(i, lock);
+            conditions.add(i, lock.newCondition());
+            clientsPositions.add(i, -1);
         }
     }
 }
