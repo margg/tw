@@ -33,8 +33,6 @@ public class Buffer {
     public void blockUntilNextAvailable(int clientId) throws InterruptedException {
         int idOfClientToWaitFor = (clientId == 0) ? CLIENTS_COUNT-1 : clientId - 1;
 
-//        System.out.println("Client " + clientId + " will be waiting for " + idOfClientToWaitFor);
-
         Condition previousCondition = conditions.get(idOfClientToWaitFor);
         Lock previousLock = clientsLocks.get(idOfClientToWaitFor);
 
@@ -44,13 +42,12 @@ public class Buffer {
             if (desiredIndex == BUFFER_SIZE) {
                 desiredIndex = 0;
             }
-//            System.out.println("Desired id for Client " + clientId + " is " + desiredIndex);
 
             int previousClientIndex = clientsPositions.get(idOfClientToWaitFor);
 
             while (desiredIndex == previousClientIndex) {
 
-                System.out.println("Client " + clientId + " waiting for previous client at index " + previousClientIndex);
+//                System.out.println("Client " + clientId + " waiting for previous client at index " + previousClientIndex);
 
                 previousCondition.await();
                 previousClientIndex = clientsPositions.get(idOfClientToWaitFor);
@@ -81,7 +78,7 @@ public class Buffer {
     public void processCurrentElement(int clientId) {
         Integer currentPosition = clientsPositions.get(clientId);
         Integer currentValue = buffer.get(currentPosition);
-        if (currentValue == CLIENTS_COUNT - 1) {
+        if (currentValue == CLIENTS_COUNT - 2) {
             System.out.println("Reached end! Consuming...");
             currentValue = -2;
         }
@@ -99,7 +96,7 @@ public class Buffer {
 
         System.out.println("Client " + clientId + " signalling work done.");
 
-        ourCondition.signalAll();
+        ourCondition.signal();
         ourLock.unlock();
     }
 
