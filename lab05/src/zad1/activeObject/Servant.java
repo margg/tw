@@ -1,7 +1,7 @@
 package zad1.activeObject;
 
+import java.util.LinkedList;
 import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * @author Małgorzata Salawa
@@ -13,7 +13,7 @@ public class Servant<T> {
 
     public Servant(int MAX_SIZE) {
         this.MAX_SIZE = MAX_SIZE;
-        this.buffer = new ConcurrentLinkedQueue<T>();
+        this.buffer = new LinkedList<T>();
     }
 
     public void put(T element) {
