@@ -1,0 +1,60 @@
+definiujemy fincje obsługi zdarzeń które nastąpią
+
+fs.createReadStream(file).on('data', function(chunk) {
+                count += chunk.toString('utf8')
+                .split(/\r\n|[\n\r\u0085\u2028\u2029]/g)
+                .length-1;
+            }).on('end', function() {
+                console.log(file, count);
+            }).on('error', function(err) {
+                console.error(err);
+            });
+---> jest wykonywana asynchronicznie!
+
+definiujemy tutaj trzy funkcje
+
+-> 'data' - mówimy że dane przyszły, wykonujemy daną funkcję
+-> 'end' - koniec danych
+
+funkcje obsługi będą wykonywane jak callbacki
+
+
+
+2. Asynchroniczne
+
+
+function fork (async_calls, shared_callback) {
+  var counter = async_calls.length;
+  var callback = function () {
+    counter --;
+    if (counter == 0) {
+      shared_callback()
+    }
+  }
+
+  for (var i=0; i < async_calls.length;i++) {
+    async_calls[i](callback);
+  }
+}
+
+dlaczego nie trzeba synchronizować callbacka??
+-> mamy pewność, że kawałki kodu nie będą wykonywane jednocześnie
+    (nie chodzi o np. czytanie z plików itp, tylko o funkcje)
+-> wykonywany jest najwyżej jeden callback w danym momencie
+
+
+
+
+
+
+file.walk(start, callback)
+Navigates a file tree, calling callback for each directory, passing in (null, dirPath, dirs, files).
+-> null -> error (jak coś będzie, to error, jak w porządku - null)
+
+!!!
+zanim wypiszemy globalną sumę, musimy być pewni że wszystkie 'end' się skończą
+
+
+
+
+
