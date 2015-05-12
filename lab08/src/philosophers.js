@@ -30,8 +30,11 @@ Fork.prototype.acquire = function (id, cb) {
     tryAcquire(1, cb);
 };
 
-Fork.prototype.release = function () {
+Fork.prototype.release = function (conductor) {
     this.state = 0;
+    if(conductor) {
+        conductor.availableSeat++;
+    }
 };
 
 var Philosopher = function (id, forks) {
@@ -150,21 +153,29 @@ Philosopher.prototype.startAsym = function (count, cb) {
 
 // ---------- CONDUCTOR SOLUTION -------------
 
-var Conductor = function () {
+var Conductor = function (N) {
+    this.availableSeat = N-1;
+    return this
 };
 
 Conductor.prototype.acquireForks = function (id, left, right, cb) {
 
+    var available = this.availableSeat;
+    var conductor = this;
+
     var tryAcquire = function (time, callback) {
         setTimeout(function () {
-            if (left.state === 0 && right.state === 0) {
-                left.state = 1;
-                right.state = 1;
-                callback();
-            } else {
-                times[id] += 2 * time;
-                tryAcquire(2 * time, callback);
-            }
+
+                if ((available > 0) && left.state === 0 && right.state === 0) {
+                    conductor.availableSeat--;
+
+                    left.state = 1;
+                    right.state = 1;
+                    callback();
+                } else {
+                    times[id] += 2 * time;
+                    tryAcquire(2 * time, callback);
+                }
         }, time);
     };
 
@@ -191,8 +202,8 @@ Philosopher.prototype.startConductor = function (conductor, count, cb) {
                 console.log("Philosopher " + id + " GOT forks.");
 
                 setTimeout(function () {
-                    left.release();
-                    right.release();
+                    left.release(conductor);
+                    right.release(conductor);
                     console.log("Philosopher " + id + " RELEASED forks.");
                     callback();
                 }, 200);
@@ -277,12 +288,13 @@ function testConductor(N, philosophers, times, conductor, cb) {
 
 // ----------- RUN ------------
 
+var times = [];
+
 function run(N) {
 
     var forks = [];
     var philosophers = [];
-    var times = [];
-    var conductor = new Conductor();
+    var conductor = new Conductor(N);
     for (var i = 0; i < N; i++) {
         forks.push(new Fork());
         times[i] = 1;
@@ -308,10 +320,10 @@ function run(N) {
 
     function printTimes() {
         for (var i = 0; i < N; i++) {
-            console.log("Philosopher " + i + " waited: " + times[i] + " ms.")
+            console.log(i + ", " + times[i])
         }
     }
 }
 
 
-run(10);
+run(7);
