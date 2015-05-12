@@ -275,34 +275,43 @@ function testConductor(N, philosophers, times, conductor, cb) {
 }
 
 
-var N = 15;
+// ----------- RUN ------------
 
-var forks = [];
-var philosophers = [];
-var times = [];
-var conductor = new Conductor();
-for (var i = 0; i < N; i++) {
-    forks.push(new Fork());
-    times[i] = 1;
-}
+function run(N) {
 
-for (var i = 0; i < N; i++) {
-    philosophers.push(new Philosopher(i, forks));
-}
-/*
-testAsym(N, philosophers, times, function () {
- console.log("\n\nASYMMETRIC SOLUTION\n");
- printTimes();
- });*/
-
-testConductor(N, philosophers, times, conductor, function () {
-    console.log("\n\nCONDUCTOR SOLUTION\n");
-    printTimes();
-});
-
-
-function printTimes() {
+    var forks = [];
+    var philosophers = [];
+    var times = [];
+    var conductor = new Conductor();
     for (var i = 0; i < N; i++) {
-        console.log("Philosopher " + i + " waited: " + times[i] + " ms.")
+        forks.push(new Fork());
+        times[i] = 1;
+    }
+
+    for (var i = 0; i < N; i++) {
+        philosophers.push(new Philosopher(i, forks));
+    }
+
+/*
+    testAsym(N, philosophers, times, function () {
+        console.log("\n\nASYMMETRIC SOLUTION\n");
+        printTimes();
+    });
+
+    */
+
+    testConductor(N, philosophers, times, conductor, function () {
+        console.log("\n\nCONDUCTOR SOLUTION\n");
+        printTimes();
+    });
+
+
+    function printTimes() {
+        for (var i = 0; i < N; i++) {
+            console.log("Philosopher " + i + " waited: " + times[i] + " ms.")
+        }
     }
 }
+
+
+run(10);
